@@ -3,7 +3,8 @@
 /* assignment specific globals */
 const INPUT_TRIANGLES_URL = "https://ncsucgclass.github.io/prog4/triangles.json"; // triangles file loc
 const INPUT_ELLIPSOIDS_URL = "https://ncsucgclass.github.io/prog4/ellipsoids.json"; // ellipsoids file loc
-const INTERESTING_URL = "https://jokocak.github.io/prog4/interesting.json";
+// const INTERESTING_URL = "https://jokocak.github.io/prog4/interesting.json";
+const INTERESTING_URL = "interesting.json";
 var defaultEye = vec3.fromValues(0.5,0.5,-0.5); // default eye position in world space
 var defaultCenter = vec3.fromValues(0.5,0.5,0.5); // default view direction in world space
 var defaultUp = vec3.fromValues(0,1,0); // default view up vector
@@ -247,6 +248,12 @@ function handleKeyDown(event) {
             } // end for all ellipsoids
             break;
     } // end switch
+
+    switch (event.key) {
+        case "!":
+            loadInterestingScene();
+            break;
+    }
 } // end handleKeyDown
 
 // set up the webGL environment
@@ -754,13 +761,8 @@ function renderModels() {
     // mat4.fromScaling(hMatrix,vec3.fromValues(-1,1,1)); // create handedness matrix
     mat4.perspective(pMatrix,0.5*Math.PI,1,0.1,10); // create projection matrix
     mat4.lookAt(vMatrix,Eye,Center,Up); // create view matrix
-
     mat4.multiply(pvMatrix,pvMatrix,pMatrix); // projection
     mat4.multiply(pvMatrix,pvMatrix,vMatrix); // projection * view
-
-    // mat4.multiply(pvMatrix, pMatrix, vMatrix); // projection * view
-    // mat4.multiply(pvmMatrix, pvMatrix, mMatrix); // projection * view * model
-
 
     // Separate opaque and transparent models
     var opaqueModels = [];
@@ -877,33 +879,33 @@ function renderModels() {
     gl.depthMask(true); // Re-enable depth writing
     gl.disable(gl.BLEND);
     
-    // render each ellipsoid
-    var ellipsoid, instanceTransform = mat4.create(); // the current ellipsoid and material
+    // // render each ellipsoid
+    // var ellipsoid, instanceTransform = mat4.create(); // the current ellipsoid and material
     
-    for (var whichEllipsoid=0; whichEllipsoid<numEllipsoids; whichEllipsoid++) {
-        ellipsoid = inputEllipsoids[whichEllipsoid];
+    // for (var whichEllipsoid=0; whichEllipsoid<numEllipsoids; whichEllipsoid++) {
+    //     ellipsoid = inputEllipsoids[whichEllipsoid];
         
-        // define model transform, premult with pvmMatrix, feed to vertex shader
-        makeModelTransform(ellipsoid);
-        pvmMatrix = mat4.multiply(pvmMatrix,pvMatrix,mMatrix); // premultiply with pv matrix
-        gl.uniformMatrix4fv(mMatrixULoc, false, mMatrix); // pass in model matrix
-        gl.uniformMatrix4fv(pvmMatrixULoc, false, pvmMatrix); // pass in project view model matrix
+    //     // define model transform, premult with pvmMatrix, feed to vertex shader
+    //     makeModelTransform(ellipsoid);
+    //     pvmMatrix = mat4.multiply(pvmMatrix,pvMatrix,mMatrix); // premultiply with pv matrix
+    //     gl.uniformMatrix4fv(mMatrixULoc, false, mMatrix); // pass in model matrix
+    //     gl.uniformMatrix4fv(pvmMatrixULoc, false, pvmMatrix); // pass in project view model matrix
 
-        // reflectivity: feed to the fragment shader
-        gl.uniform3fv(ambientULoc,ellipsoid.ambient); // pass in the ambient reflectivity
-        gl.uniform3fv(diffuseULoc,ellipsoid.diffuse); // pass in the diffuse reflectivity
-        gl.uniform3fv(specularULoc,ellipsoid.specular); // pass in the specular reflectivity
-        gl.uniform1f(shininessULoc,ellipsoid.n); // pass in the specular exponent
+    //     // reflectivity: feed to the fragment shader
+    //     gl.uniform3fv(ambientULoc,ellipsoid.ambient); // pass in the ambient reflectivity
+    //     gl.uniform3fv(diffuseULoc,ellipsoid.diffuse); // pass in the diffuse reflectivity
+    //     gl.uniform3fv(specularULoc,ellipsoid.specular); // pass in the specular reflectivity
+    //     gl.uniform1f(shininessULoc,ellipsoid.n); // pass in the specular exponent
 
-        gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffers[numTriangleSets+whichEllipsoid]); // activate vertex buffer
-        gl.vertexAttribPointer(vPosAttribLoc,3,gl.FLOAT,false,0,0); // feed vertex buffer to shader
-        gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffers[numTriangleSets+whichEllipsoid]); // activate normal buffer
-        gl.vertexAttribPointer(vNormAttribLoc,3,gl.FLOAT,false,0,0); // feed normal buffer to shader
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,triangleBuffers[numTriangleSets+whichEllipsoid]); // activate tri buffer
+    //     gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffers[numTriangleSets+whichEllipsoid]); // activate vertex buffer
+    //     gl.vertexAttribPointer(vPosAttribLoc,3,gl.FLOAT,false,0,0); // feed vertex buffer to shader
+    //     gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffers[numTriangleSets+whichEllipsoid]); // activate normal buffer
+    //     gl.vertexAttribPointer(vNormAttribLoc,3,gl.FLOAT,false,0,0); // feed normal buffer to shader
+    //     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,triangleBuffers[numTriangleSets+whichEllipsoid]); // activate tri buffer
         
-        // draw a transformed instance of the ellipsoid
-        gl.drawElements(gl.TRIANGLES,triSetSizes[numTriangleSets+whichEllipsoid],gl.UNSIGNED_SHORT,0); // render
-    } // end for each ellipsoid
+    //     // draw a transformed instance of the ellipsoid
+    //     gl.drawElements(gl.TRIANGLES,triSetSizes[numTriangleSets+whichEllipsoid],gl.UNSIGNED_SHORT,0); // render
+    // } // end for each ellipsoid
 } // end render model
 
 // Handles a loaded texture
@@ -933,7 +935,12 @@ function isPowerOf2(value) {
 }
 
 function loadInterestingScene() {
-    loadTriangles(currentURL);
+    if (currentURL === INPUT_TRIANGLES_URL) {
+        currentURL = INTERESTING_URL;
+    } else {
+        currentURL = INPUT_TRIANGLES_URL;
+    }
+    loadModels();
 }
 
 
